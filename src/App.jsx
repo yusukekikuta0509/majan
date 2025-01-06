@@ -40,10 +40,11 @@ const yakuList = [
 ];
 
 // ------------------ 2. 得点計算ロジック ------------------
+// Dora・一発を考慮し、翻数に加算します。
 const calculateScore = (han, fu) => {
   // 役満チェック
   if (han >= 13) {
-    return 32000; // 簡易的に一律 32000 点とする
+    return 32000; // 簡易的に一律 32000 点
   }
   // 基本点
   const basePoint = fu * Math.pow(2, 2 + han);
@@ -65,28 +66,25 @@ const calculateScore = (han, fu) => {
 
 // ------------------ 3. ジョーク機能（もし賭けていたら…） ------------------
 function calculateGamblingImpact({ score, isParent, isTsumo, isWinner, rate }) {
-  // score は「子のロン時」を想定した基本点だが、ジョークとして適当に補正
   let baseMoney = 0;
 
   if (isWinner) {
-    // 自分が和了（勝ち）した場合
+    // 自分が和了
     if (isTsumo) {
-      // ツモあがり → 3人(または2人分)からもらう計算
+      // ツモ→3人(または2人)から
       let total = score * 3;
       if (isParent) {
-        // 親ツモはやや多め
-        total = Math.round(score * 3.5);
+        total = Math.round(score * 3.5); // 親ツモはやや多め
       }
       baseMoney = total * rate;
     } else {
-      // ロンあがり → 放銃者1人から全額
-      // 親なら1.5倍
+      // ロン→放銃者1人、親なら1.5倍
       baseMoney = score * (isParent ? 1.5 : 1) * rate;
     }
   } else {
-    // 自分が放銃・負けた場合
+    // 自分が放銃・負け
     if (isTsumo) {
-      // 相手のツモに振り込んだ → 3人分を等分、親なら2倍など簡略化
+      // 相手ツモ→3人で分担、親なら負担増
       let pay = Math.round((score * rate) / 3);
       if (isParent) {
         pay = Math.round((score * rate) / 2);
@@ -98,7 +96,7 @@ function calculateGamblingImpact({ score, isParent, isTsumo, isWinner, rate }) {
     }
   }
 
-  // 四捨五入
+  // 整数に丸める
   baseMoney = Math.round(baseMoney);
 
   if (isWinner) {
@@ -113,28 +111,33 @@ function App() {
   // ローディング管理用のステート
   const [isLoading, setIsLoading] = useState(false);
 
-  // 選択された役
+  // 役選択
   const [selectedYaku, setSelectedYaku] = useState([]);
-  // 門前か副露か
+  // 門前 or 副露
   const [isClosedHand, setIsClosedHand] = useState(true);
   // 符
   const [fu, setFu] = useState(30);
 
-  // 親か子か
+  // 親 or 子
   const [isParent, setIsParent] = useState(false);
-  // ツモかロンか
+  // ツモ or ロン
   const [isTsumo, setIsTsumo] = useState(false);
   // 勝ち or 負け
   const [isWinner, setIsWinner] = useState(true);
-  // レート(円/点)
+  // レート
   const [rate, setRate] = useState(4);
+
+  // ドラ枚数
+  const [dora, setDora] = useState(0);
+  // 一発の有無
+  const [isIppatsu, setIsIppatsu] = useState(false);
 
   // 計算結果
   const [score, setScore] = useState(null);
   // ジョークメッセージ
   const [joke, setJoke] = useState("");
 
-  // 役選択ハンドラ
+  // 役のチェック/アンチェック
   const handleYakuChange = (yakuName) => {
     if (selectedYaku.includes(yakuName)) {
       setSelectedYaku(selectedYaku.filter((name) => name !== yakuName));
@@ -143,17 +146,15 @@ function App() {
     }
   };
 
-  // 計算ボタン押下時
+  // 計算ボタン押下
   const handleCalculateScore = () => {
-    // ローディング開始
     setIsLoading(true);
-
-    // 既存の結果・ジョークをクリア
     setScore(null);
     setJoke("");
 
-    // 1秒待ってから計算（演出用ディレイ）
+    // 演出用に1秒ディレイ
     setTimeout(() => {
+      // 1) 選択された役から合計翻数を算出
       let totalHan = 0;
       selectedYaku.forEach((yName) => {
         const y = yakuList.find((item) => item.name === yName);
@@ -162,9 +163,18 @@ function App() {
         }
       });
 
+      // 2) ドラと一発を加算
+      //    ドラ枚数分を翻に上乗せ、一発なら+1翻
+      totalHan += dora; 
+      if (isIppatsu) {
+        totalHan += 1;
+      }
+
+      // 3) 得点計算
       const finalScore = calculateScore(totalHan, fu);
       setScore(finalScore);
 
+      // 4) ジョーク機能
       const text = calculateGamblingImpact({
         score: finalScore,
         isParent,
@@ -198,9 +208,8 @@ function App() {
           </h1>
         </header>
 
-        {/* メインエリア */}
         <main className="flex flex-1 p-4 gap-4">
-          {/* 左カラム（設定・役一覧） */}
+          {/* 左カラム（手牌設定・役一覧） */}
           <section className="w-72 flex-shrink-0 space-y-4">
             {/* 手牌の設定 */}
             <div className="bg-white bg-opacity-10 rounded p-4 space-y-3">
@@ -265,6 +274,28 @@ function App() {
                   onChange={(e) => setRate(parseInt(e.target.value, 10))}
                 />
               </label>
+
+              {/* ドラ枚数 */}
+              <label className="flex items-center space-x-2">
+                <span>ドラ枚数:</span>
+                <input
+                  type="number"
+                  className="w-16 p-1 rounded text-black"
+                  value={dora}
+                  onChange={(e) => setDora(parseInt(e.target.value, 10))}
+                />
+              </label>
+
+              {/* 一発の有無 */}
+              <label className="inline-flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  className="form-checkbox h-5 w-5 text-blue-500"
+                  checked={isIppatsu}
+                  onChange={() => setIsIppatsu(!isIppatsu)}
+                />
+                <span>一発</span>
+              </label>
             </div>
 
             {/* 役一覧 */}
@@ -307,7 +338,6 @@ function App() {
               {/* ローディングスピナー */}
               {isLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded">
-                  {/* くるくる回るスピナー */}
                   <div className="animate-spin border-4 border-orange-500 border-t-transparent rounded-full w-10 h-10"></div>
                 </div>
               )}
@@ -315,7 +345,6 @@ function App() {
               {score === null && !isLoading ? (
                 <p className="text-gray-200">まだ計算されていません</p>
               ) : (
-                // スコアが計算されたら、fadeIn で表示
                 !isLoading &&
                 score !== null && (
                   <div className="opacity-0 animate-fadeIn">
