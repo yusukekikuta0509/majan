@@ -1,0 +1,25 @@
+
+
+/* Tailwind の必須ディレクティブ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+
+/* もし追加のグローバルCSSを書くならここへ */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "MyCustomFont", sans-serif;
+}
+@layer base {
+  html {
+    font-size: 20px; /* pxやremなどお好みで */
+    font-weight: 300;
+  }
+  body {
+    margin: 0; /* ついでに余白リセットなど */
+  }
+}

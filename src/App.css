@@ -1,0 +1,134 @@
+/* 画面全体のリセット・ベーススタイルなど */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Dela Gothic One', sans-serif;
+  background: linear-gradient(to bottom right, #000B58, #2A004E);
+  color: #ffffff;
+  min-height: 100vh;
+}
+
+/* メインコンテナ */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ヘッダー */
+.app-header {
+  text-align: center;
+  padding: 16px;
+  background-color: rgba(255, 255, 255, 0.1);
+  margin-bottom: 16px;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+/* コンテンツ全体を左右2カラムに */
+.content-area {
+  display: flex;
+  flex: 1;
+  gap: 16px;
+  padding: 16px;
+}
+
+/* サイドバー（左カラム） */
+.sidebar {
+  flex: 0 0 300px; 
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* メインコンテンツ（右カラム） */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* カード風の表示枠 */
+.card {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 16px;
+  border-radius: 4px;
+}
+
+/* 入力グループ */
+.input-group {
+  margin-bottom: 8px;
+}
+
+.input-group label {
+  cursor: pointer;
+}
+
+/* 役一覧 */
+.yaku-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin-top: 8px;
+  max-height: 300px;       /* 必要に応じて高さを固定 */
+  overflow-y: auto;        /* スクロール可にする */
+}
+.yaku-list li {
+  margin-bottom: 6px;
+}
+.yaku-list input {
+  margin-right: 4px;
+}
+
+/* 計算ボタン */
+.btn-calc {
+  background-color: #ff7a00;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.btn-calc:hover {
+  background-color: #ff9b22;
+}
+
+/* 結果表示 */
+.result-card {
+  min-height: 200px;
+  text-align: left;
+}
+
+.score {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-top: 12px;
+}
+
+.joke {
+  margin-top: 12px;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .content-area {
+    flex-direction: column;
+  }
+  .sidebar {
+    flex: initial;
+    width: 100%;
+  }
+  .main-content {
+    width: 100%;
+  }
+}
